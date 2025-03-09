@@ -57,7 +57,7 @@ class Tetris:
         self.piece_x, self.piece_y = 0, 0
         self.piece_rotation = 0
         self.hold_piece = None
-        self.next_pieces = [random.choice(list(PIECES.keys())) for _ in range(5)]
+        self.next_pieces = self.get_next_pieces()
         self.score = 0
         self.lines = 0
         self.time = 0
@@ -129,7 +129,7 @@ class Tetris:
 
     def spawn_piece(self):
         self.piece = self.next_pieces.pop(0)
-        self.next_pieces.append(random.choice(list(PIECES.keys())))
+        self.next_pieces = self.next_pieces + self.get_next_pieces()
         self.piece_x, self.piece_y = GRID_WIDTH // 2, 0
         self.piece_rotation = 0
 
@@ -202,6 +202,8 @@ class Tetris:
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
                 pygame.draw.rect(self.screen, GRAY, (x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
+                if self.grid[y][x] == 1:
+                    pygame.draw.rect(self.screen, WHITE, (x * BLOCK_SIZE + 1, y * BLOCK_SIZE + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2))
 
     def draw_piece(self):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
@@ -264,7 +266,7 @@ class Tetris:
         self.piece_x, self.piece_y = 0, 0
         self.piece_rotation = 0
         self.hold_piece = None
-        self.next_pieces = [random.choice(list(PIECES.keys())) for _ in range(5)]
+        self.next_pieces = self.get_next_pieces()
         self.score = 0
         self.lines = 0
         self.time = 0
@@ -280,6 +282,11 @@ class Tetris:
             'Z': Z_COLOR
         }
         return colors[piece]
+
+    def get_next_pieces(self):
+        pieces = list(PIECES.keys())
+        random.shuffle(pieces)
+        return pieces[:7]
 
 if __name__ == "__main__":
     game = Tetris()
