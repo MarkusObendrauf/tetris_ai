@@ -1,0 +1,17 @@
+Write a Tetris game in Pygame where the goal is to get a fast 40line sprint time. The game should display a player's time upon clearing 40 lines. Follow The Tetris Company's Tetris Guideline as closely as possible to make the game familiar. Your code will be evaluated by how fast an experienced player can play on it.
+
+Make sure that all pieces move and rotate according to the Guideline. Show a ghost piece. Allow the player to hold a piece. Show the next 5 pieces in the queue and use the Guideline randomizer.
+
+Use the following control scheme:
+Move Left: left
+Move Right: right
+Soft Drop: down
+Hard Drop: c
+Rotate Left: x
+Rotate Right: up
+Rotate 180: z
+Hold: shift
+Reset game: v
+DAS: 80ms
+ARR: 0ms
+Soft Drop Rate: Instant
