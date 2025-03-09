@@ -16,6 +16,13 @@ SOFT_DROP = 1  # Instant soft drop
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
+I_COLOR = (0, 255, 255)
+J_COLOR = (0, 0, 255)
+L_COLOR = (255, 165, 0)
+O_COLOR = (255, 255, 0)
+S_COLOR = (0, 128, 0)
+T_COLOR = (128, 0, 128)
+Z_COLOR = (255, 0, 0)
 
 # Define piece shapes
 PIECES = {
@@ -55,6 +62,7 @@ class Tetris:
         self.lines = 0
         self.time = 0
         self.das_timer = 0
+        self.das_direction = 0
 
     def run(self):
         running = True
@@ -66,8 +74,12 @@ class Tetris:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         self.move_piece(-1)
+                        self.das_direction = -1
+                        self.das_timer = 0
                     elif event.key == pygame.K_RIGHT:
                         self.move_piece(1)
+                        self.das_direction = 1
+                        self.das_timer = 0
                     elif event.key == pygame.K_DOWN:
                         self.soft_drop()
                     elif event.key == pygame.K_c:
@@ -83,6 +95,13 @@ class Tetris:
                     elif event.key == pygame.K_v:
                         self.reset_game()
 
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
+                self.das_timer += 1
+                if self.das_timer >= DAS:
+                    self.das_timer = 0
+                    self.move_piece(self.das_direction)
+
             self.update()
             self.draw()
 
@@ -90,10 +109,6 @@ class Tetris:
 
     def update(self):
         self.time += 1 / 60
-        self.das_timer += 1
-        if self.das_timer >= DAS:
-            self.das_timer = 0
-            self.move_piece(0)
 
         if self.piece is None:
             self.spawn_piece()
@@ -190,20 +205,22 @@ class Tetris:
 
     def draw_piece(self):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
+        color = self.get_piece_color(self.piece)
         for y, row in enumerate(piece_shape):
             for x, val in enumerate(row):
                 if val:
-                    pygame.draw.rect(self.screen, WHITE, ((self.piece_x + x) * BLOCK_SIZE, (self.piece_y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+                    pygame.draw.rect(self.screen, color, ((self.piece_x + x) * BLOCK_SIZE, (self.piece_y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
 
     def draw_ghost_piece(self):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
         ghost_y = self.piece_y
         while ghost_y + len(piece_shape) < GRID_HEIGHT and not self.check_collision_ghost(ghost_y + 1):
             ghost_y += 1
+        color = self.get_piece_color(self.piece)
         for y, row in enumerate(piece_shape):
             for x, val in enumerate(row):
                 if val:
-                    pygame.draw.rect(self.screen, GRAY, ((self.piece_x + x) * BLOCK_SIZE, (ghost_y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
+                    pygame.draw.rect(self.screen, color, ((self.piece_x + x) * BLOCK_SIZE, (ghost_y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
 
     def check_collision_ghost(self, dy):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
@@ -218,18 +235,20 @@ class Tetris:
     def draw_hold_piece(self):
         if self.hold_piece:
             piece_shape = PIECES[self.hold_piece]
+            color = self.get_piece_color(self.hold_piece)
             for y, row in enumerate(piece_shape):
                 for x, val in enumerate(row):
                     if val:
-                        pygame.draw.rect(self.screen, WHITE, ((x + 1) * BLOCK_SIZE, (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+                        pygame.draw.rect(self.screen, color, ((x + 1) * BLOCK_SIZE + 200, (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
 
     def draw_next_pieces(self):
         for i, piece in enumerate(self.next_pieces):
             piece_shape = PIECES[piece]
+            color = self.get_piece_color(piece)
             for y, row in enumerate(piece_shape):
                 for x, val in enumerate(row):
                     if val:
-                        pygame.draw.rect(self.screen, WHITE, ((x + 1) * BLOCK_SIZE, (y + 1 + i * 5) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+                        pygame.draw.rect(self.screen, color, ((x + 1) * BLOCK_SIZE + 200, (y + 1 + i * 5) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
 
     def draw_score(self):
         text = self.font.render(f"Score: {self.score}", True, WHITE)
@@ -249,6 +268,18 @@ class Tetris:
         self.score = 0
         self.lines = 0
         self.time = 0
+
+    def get_piece_color(self, piece):
+        colors = {
+            'I': I_COLOR,
+            'J': J_COLOR,
+            'L': L_COLOR,
+            'O': O_COLOR,
+            'S': S_COLOR,
+            'T': T_COLOR,
+            'Z': Z_COLOR
+        }
+        return colors[piece]
 
 if __name__ == "__main__":
     game = Tetris()
