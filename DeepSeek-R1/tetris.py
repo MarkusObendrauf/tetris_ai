@@ -140,16 +140,26 @@ class TetrisGame:
         self._spawn_new_piece()
 
     def _fill_bag(self):
-        if not self.bag:
-            self.bag = list(TETRIMINOS.keys())
-            random.shuffle(self.bag)
+        # Keep adding complete 7-bags until we have enough pieces
         while len(self.next_pieces) < 5:
-            self.next_pieces.extend(self.bag)
-            random.shuffle(self.bag)
+            if not self.bag:
+                # Create new 7-bag when empty
+                self.bag = list(TETRIMINOS.keys())
+                random.shuffle(self.bag)
+            # Take only as many as needed from current bag
+            needed = 5 - len(self.next_pieces)
+            take = min(needed, len(self.bag))
+            self.next_pieces.extend(self.bag[:take])
+            self.bag = self.bag[take:]
 
     def _spawn_new_piece(self):
         if not self.next_pieces:
             self._fill_bag()
+
+        # Always keep 5 pieces in the queue
+        if len(self.next_pieces) <= 5:
+            self._fill_bag()
+
         piece_type = self.next_pieces.pop(0)
         self.current_piece = {
             'type': piece_type,
@@ -161,8 +171,10 @@ class TetrisGame:
         }
         self.can_hold = True
         self.ghost_piece = self._get_ghost_position()
+
         if self._check_collision():
             self.game_over = True
+
 
     def _get_ghost_position(self):
         ghost = self.current_piece.copy()
