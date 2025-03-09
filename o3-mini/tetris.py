@@ -21,7 +21,7 @@ Movement settings:
 import pygame, random, sys
 
 pygame.init()
-WIDTH, HEIGHT = 400, 800
+WIDTH, HEIGHT = 600, 800         # Changed width to 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tetris 40line Sprint")
 clock = pygame.time.Clock()
@@ -31,6 +31,9 @@ FONT = pygame.font.SysFont("Arial", 20)
 COLS, ROWS = 10, 22  # top 2 rows hidden
 CELL_SIZE = 32
 BOARD_TOP = 60
+
+# Preview configuration (for hold and next pieces)
+PREVIEW_CELL = 32  # larger preview cell size
 
 # Colors
 COLORS = {
@@ -46,12 +49,12 @@ COLORS = {
     "ghost": (100, 100, 100)
 }
 
-# Define spawn offsets (rotation 0) using guideline conventions.
-# Here y increases downward. For guideline pieces the “up” cell is negative.
+# Define spawn offsets following Guideline conventions.
+# Note: We have swapped the definitions for J and L.
 SPAWN_OFFSETS = {
     "I": [(-1, 0), (0, 0), (1, 0), (2, 0)],
-    "J": [(-1, 0), (0, 0), (1, 0), (-1, -1)],
-    "L": [(-1, 0), (0, 0), (1, 0), (1, -1)],
+    "J": [(-1, 0), (0, 0), (1, 0), (1, -1)],   # Was L before; now for J.
+    "L": [(-1, 0), (0, 0), (1, 0), (-1, -1)],  # Was J before; now for L.
     "O": [(0, 0), (1, 0), (0, -1), (1, -1)],
     "S": [(0, 0), (1, 0), (-1, -1), (0, -1)],
     "T": [(-1, 0), (0, 0), (1, 0), (0, -1)],
@@ -62,7 +65,7 @@ SPAWN_OFFSETS = {
 def rotate_offsets(offsets, times):
     pts = offsets[:]
     for _ in range(times):
-        # Clockwise rotation: (x,y) -> (y, -x)
+        # Standard 90° clockwise: (x,y) -> (y, -x)
         pts = [(y, -x) for (x, y) in pts]
     return pts
 
@@ -70,10 +73,10 @@ def rotate_offsets(offsets, times):
 PIECES = {}
 for shape, offsets in SPAWN_OFFSETS.items():
     PIECES[shape] = [
-        offsets,                          # rotation 0 (spawn state)
-        rotate_offsets(offsets, 1),         # rotation 1 (90° clockwise)
-        rotate_offsets(offsets, 2),         # rotation 2 (180°)
-        rotate_offsets(offsets, 3)          # rotation 3 (270° clockwise)
+        offsets,
+        rotate_offsets(offsets, 1),
+        rotate_offsets(offsets, 2),
+        rotate_offsets(offsets, 3)
     ]
 
 # SRS wall kick data (simplified).
@@ -111,8 +114,7 @@ class Piece:
     def __init__(self, shape):
         self.shape = shape
         self.rotation = 0
-        # spawn piece in the visible part; note: using y=-2 to allow for wall kicks.
-        self.x = 3
+        self.x = 4
         self.y = -2
 
     def get_blocks(self, rot=None, pos=None):
@@ -122,9 +124,8 @@ class Piece:
         return [(px + dx, py + dy) for dx, dy in PIECES[self.shape][r]]
 
     def rotate(self, direction, board):
-        # direction is "CW" (clockwise) or "CCW" (counterclockwise).
         if self.shape == "O":
-            return True  # no change
+            return True
         new_rotation = (self.rotation + (1 if direction=="CW" else -1)) % 4
         kicks = (WALL_KICKS["I"] if self.shape=="I" else WALL_KICKS["normal"])[direction]
         for dx, dy in kicks:
@@ -169,11 +170,10 @@ def get_ghost(piece, board):
             break
     return ghost
 
-# Slide piece horizontally as far as possible in the given direction.
 def slide_piece(piece, board, dx):
     candidate = piece.x
     while True:
-        new_blocks = [(candidate + dx + bx, piece.y + by) for bx,by in PIECES[piece.shape][piece.rotation]]
+        new_blocks = [(candidate + dx + bx, piece.y + by) for bx, by in PIECES[piece.shape][piece.rotation]]
         if valid_position(new_blocks, board):
             candidate += dx
         else:
@@ -211,12 +211,12 @@ class TetrisGame:
         self.start_time = pygame.time.get_ticks()
         self.finish_time = None
 
-        # DAS state for horizontal movement.
+        # DAS state.
         self.left_pressed = False
         self.right_pressed = False
         self.left_timer = None
         self.right_timer = None
-        self.left_auto = False  # becomes True once auto–shift has been executed.
+        self.left_auto = False
         self.right_auto = False
 
     def spawn_piece(self):
@@ -268,19 +268,18 @@ class TetrisGame:
             return
 
         self.gravity_timer += dt
-        drop_interval = 1000  # ms; sprinters use hard drop mostly.
+        drop_interval = 1000  # ms
         if self.gravity_timer >= drop_interval:
-            if not self.move(0,1):
+            if not self.move(0, 1):
                 self.lock_piece()
             self.gravity_timer = 0
 
         now = pygame.time.get_ticks()
-        # For left DAS: already moved one on keydown. After 80ms, if still held and not auto shifted, slide to edge.
+        # Horizontal DAS handling.
         if self.left_pressed:
             if self.left_timer is not None and not self.left_auto and now - self.left_timer >= 80:
                 slide_piece(self.current, self.board, -1)
                 self.left_auto = True
-        # Similarly for right.
         if self.right_pressed:
             if self.right_timer is not None and not self.right_auto and now - self.right_timer >= 80:
                 slide_piece(self.current, self.board, 1)
@@ -290,36 +289,43 @@ class TetrisGame:
         screen.fill(COLORS["bg"])
         draw_board(self.board)
 
-        # Draw ghost.
+        # Draw ghost piece.
         ghost = get_ghost(self.current, self.board)
         for x, y in ghost.get_blocks():
-            if y >= 2:  # only draw visible cells
-                rect = pygame.Rect(x*CELL_SIZE, BOARD_TOP + (y-2)*CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            if y >= 2:
+                rect = pygame.Rect(x * CELL_SIZE, BOARD_TOP + (y-2)*CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(screen, COLORS["ghost"], rect, 1)
 
         # Draw current piece.
         for x, y in self.current.get_blocks():
             if y >= 2:
-                rect = pygame.Rect(x*CELL_SIZE, BOARD_TOP + (y-2)*CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                rect = pygame.Rect(x * CELL_SIZE, BOARD_TOP + (y-2)*CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(screen, COLORS[self.current.shape], rect.inflate(-2, -2))
 
-        # Draw hold area.
-        hold_text = FONT.render("Hold", True, (200,200,200))
-        screen.blit(hold_text, (COLS*CELL_SIZE+20, 60))
-        if self.hold:
-            for dx, dy in PIECES[self.hold][0]:
-                rect = pygame.Rect(COLS*CELL_SIZE+20 + (dx+1)*CELL_SIZE//2,
-                                   90 + (dy+1)*CELL_SIZE//2, CELL_SIZE//2, CELL_SIZE//2)
-                pygame.draw.rect(screen, COLORS[self.hold], rect.inflate(-2, -2))
-
-        # Draw next queue.
+        # Draw the Next queue.
+        next_area_x = COLS * CELL_SIZE + 20
+        next_area_y = 200
         next_text = FONT.render("Next", True, (200,200,200))
-        screen.blit(next_text, (COLS*CELL_SIZE+20,200))
+        screen.blit(next_text, (next_area_x, next_area_y))
         for i, shape in enumerate(self.next_queue):
             for dx, dy in PIECES[shape][0]:
-                rect = pygame.Rect(COLS*CELL_SIZE+20 + (dx+1)*CELL_SIZE//2,
-                                   230 + i*CELL_SIZE + (dy+1)*CELL_SIZE//2, CELL_SIZE//2, CELL_SIZE//2)
+                rect = pygame.Rect(next_area_x + (dx+2) * PREVIEW_CELL,
+                                   next_area_y + 30 + i * (PREVIEW_CELL*3) + (dy+2) * PREVIEW_CELL,
+                                   PREVIEW_CELL, PREVIEW_CELL)
                 pygame.draw.rect(screen, COLORS[shape], rect.inflate(-2, -2))
+
+        # Draw the Hold piece BELOW the queue.
+        # We position it below the entire queue.
+        hold_area_x = next_area_x
+        hold_area_y = next_area_y + 5 * (PREVIEW_CELL * 3) + 20
+        hold_text = FONT.render("Hold", True, (200,200,200))
+        screen.blit(hold_text, (hold_area_x, hold_area_y))
+        if self.hold:
+            for dx, dy in PIECES[self.hold][0]:
+                rect = pygame.Rect(hold_area_x + (dx+2)*PREVIEW_CELL,
+                                   hold_area_y + 30 + (dy+2)*PREVIEW_CELL,
+                                   PREVIEW_CELL, PREVIEW_CELL)
+                pygame.draw.rect(screen, COLORS[self.hold], rect.inflate(-2, -2))
 
         if self.finish_time is not None:
             t_sec = self.finish_time / 1000.0
@@ -336,10 +342,8 @@ while True:
             pygame.quit()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            # Reset game.
             if event.key == pygame.K_v:
                 game.reset()
-            # If game over or finished, skip processing keys.
             if game.game_over or game.finish_time is not None:
                 continue
 
@@ -351,20 +355,19 @@ while True:
             elif event.key == pygame.K_z:
                 game.current.rotate180(game.board)
             elif event.key == pygame.K_DOWN:
-                if not game.move(0,1):
+                if not game.move(0, 1):
                     game.lock_piece()
             elif event.key == pygame.K_c:
                 game.hard_drop()
             elif event.key in (pygame.K_RSHIFT, pygame.K_LSHIFT):
                 game.hold_piece()
             elif event.key == pygame.K_LEFT:
-                # Immediate move on keydown.
-                game.move(-1,0)
+                game.move(-1, 0)
                 game.left_pressed = True
                 game.left_timer = pygame.time.get_ticks()
                 game.left_auto = False
             elif event.key == pygame.K_RIGHT:
-                game.move(1,0)
+                game.move(1, 0)
                 game.right_pressed = True
                 game.right_timer = pygame.time.get_ticks()
                 game.right_auto = False

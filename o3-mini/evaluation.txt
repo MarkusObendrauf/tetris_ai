@@ -1,0 +1,14 @@
+Time taken:
+12 minutes
+
+Best time:
+45 seconds
+
+Speed:
+About 2.24 Pieces Per second
+
+Issues:
+DAS not preserved on edge hits
+J and L are the wrong way round
+I rotations are broken
+
