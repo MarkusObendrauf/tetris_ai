@@ -32,12 +32,15 @@ class Grid:
                 return False
         return True
 
-    def clear_rows(self):
+    def clear_rows(self) -> int:
+        lines_cleared = 0
         for i, row in enumerate(self.grid):
             row = self.grid[i]
             if (0, 0, 0) not in row:
+                lines_cleared += 1
                 del self.grid[i]
                 self.grid.insert(0, [(0, 0, 0) for _ in range(Grid.WIDTH)])
+        return lines_cleared
 
     def draw(self, surface: pygame.Surface, tile_size: int):
         for i in range(Grid.HEIGHT):

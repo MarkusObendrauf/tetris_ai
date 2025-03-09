@@ -5,11 +5,12 @@ import pygame
 from active_tetramino import ActiveTetramino
 from grid import Grid
 from queue import QUEUE_PIECE_HEIGHT, VISIBLE_QUEUE_LENGTH
+from time import time
 
 from tetraminos import Tetramino
 
 pygame.font.init()
-FONT = pygame.font.Font(pygame.font.get_default_font(), 32)
+FONT = pygame.font.Font(pygame.font.get_default_font(), 64)
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 700
@@ -38,6 +39,9 @@ class GameState:
     left_held: bool = False
     hold_available: bool = True
     left_das_timer: int = 0
+
+    lines_left: int = 40
+    start_time: float = time()
 
 
 def draw(window: pygame.Surface, gs: GameState):
@@ -75,6 +79,16 @@ def draw(window: pygame.Surface, gs: GameState):
     gs.grid.draw_gridlines(grid_surface, BLOCK_SIZE)
     if gs.held_tetramino is not None:
         ActiveTetramino(gs.held_tetramino, 1, 3).draw(hold_piece_surface, BLOCK_SIZE)
+
+    text_surface = FONT.render(str(gs.lines_left), False, (255, 255, 255))
+    window.blit(
+        text_surface,
+        (
+            BLOCK_SIZE * 2,
+            WINDOW_HEIGHT - BLOCK_SIZE * 4,
+        ),
+    )
+
     pygame.display.update()
 
 
@@ -158,12 +172,16 @@ def main(window: pygame.Surface):
 
         if lock_piece:
             gs.grid.insert_piece(gs.active_tetramino)
-            gs.grid.clear_rows()
+            lines_cleared = gs.grid.clear_rows()
+            gs.lines_left -= lines_cleared
             gs.fall_timer = 0
             gs.active_tetramino = ActiveTetramino(queue.pop())
             lock_piece = False
             gs.hold_available = True
 
+        if gs.lines_left < 1:
+            print(time() - gs.start_time)
+            break
         draw(window, gs)
 
 
