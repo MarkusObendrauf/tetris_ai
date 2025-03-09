@@ -1,11 +1,13 @@
+from copy import copy
+import pygame
 from grid import Grid
 from tetraminos import Tetramino
 
 
 class ActiveTetramino(Tetramino):
     def __init__(self, tetramino: Tetramino):
-        self.x = 3
-        self.y = 0
+        self.x = 4
+        self.y = 2
         self.rotation = 0
         super().__init__(tetramino.color, tetramino.shapes, tetramino.rotation_offsets)
 
@@ -65,3 +67,24 @@ class ActiveTetramino(Tetramino):
             positions[i] = (pos[0] - 2, pos[1] - 4)
 
         return positions
+
+    def draw(self, surface: pygame.Surface, tile_size: int):
+        for x, y in self.get_positions():
+            pygame.draw.rect(
+                surface,
+                self.color,
+                (
+                    x * tile_size,
+                    y * tile_size,
+                    tile_size,
+                    tile_size,
+                ),
+                0,
+            )
+
+    def draw_ghost(self, surface: pygame.Surface, tile_size: int):
+        ghost = copy(self)
+        ghost.color = (self.color[0] // 2, self.color[1] // 2, self.color[2] // 2)
+        while ghost.move_down():
+            pass
+        ghost.draw(surface, tile_size)
