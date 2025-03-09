@@ -1,0 +1,16 @@
+Time taken:
+25 minutes
+
+Best time:
+N/A (I was unable to clear due to crashes)
+
+Speed:
+About 1.03 Pieces Per second
+
+Issues:
+Rotating the I piece crashes the game.
+T rotation is broken.
+DAS was not implemented.
+The held piece overlaps the playing field.
+The rotation system is custom and doesn't follow the Tetris Guideline.
+
