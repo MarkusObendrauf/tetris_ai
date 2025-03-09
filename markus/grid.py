@@ -15,6 +15,9 @@ class Grid:
     def get():
         return Grid()
 
+    def reset(self):
+        self.__init__()
+
     def insert_piece(self, active_tetramino):
         for x, y in active_tetramino.get_positions():
             self.grid[y][x] = active_tetramino.color

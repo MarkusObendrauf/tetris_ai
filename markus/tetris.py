@@ -116,6 +116,9 @@ def main(window: pygame.Surface):
                     gs.right_das_timer = 0
 
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_v:
+                    gs.grid.reset()
+                    main(window)
                 if event.key == pygame.K_LEFT:
                     gs.active_tetramino.move_left()
                     gs.left_held = True
