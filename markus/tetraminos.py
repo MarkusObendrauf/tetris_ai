@@ -57,7 +57,7 @@ I = Tetramino(  # noqa: E741
 )
 
 J = Tetramino(
-    (255, 165, 0),
+    (0, 0, 255),
     # fmt: off
     [['.....',
       '.0...',
@@ -84,7 +84,7 @@ J = Tetramino(
 )
 
 L = Tetramino(
-    (0, 0, 255),
+    (255, 165, 0),
     # fmt: off
     [['.....',
       '...0.',
@@ -218,3 +218,5 @@ Z = Tetramino(
     # fmt: on
     ROTATION_OFFSETS_DEFAULT,
 )
+
+ALL_TETRAMINOS = [I, J, L, O, S, T, Z]
