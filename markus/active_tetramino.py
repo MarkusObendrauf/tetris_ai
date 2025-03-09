@@ -1,52 +1,52 @@
+from grid import Grid
 from tetraminos import Tetramino
 
 
 class ActiveTetramino(Tetramino):
-    def __init__(self, tetramino: Tetramino, grid):
+    def __init__(self, tetramino: Tetramino):
         self.x = 3
         self.y = 0
         self.rotation = 0
         super().__init__(tetramino.color, tetramino.shapes, tetramino.rotation_offsets)
-        self.grid = grid
 
     def move_left(self) -> bool:
         self.x -= 1
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.x += 1
             return False
         return True
 
     def move_right(self) -> bool:
         self.x += 1
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.x -= 1
             return False
         return True
 
     def move_down(self) -> bool:
         self.y += 1
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.y -= 1
             return False
         return True
 
     def rotate_cw(self) -> bool:
         self.rotation = (self.rotation + 1) % 4
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.rotation = (self.rotation + 3) % 4
             return False
         return True
 
     def rotate_ccw(self) -> bool:
         self.rotation = (self.rotation + 3) % 4
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.rotation = (self.rotation + 1) % 4
             return False
         return True
 
     def rotate_180(self) -> bool:
         self.rotation = (self.rotation + 2) % 4
-        if not self.grid.fits(self):
+        if not Grid.get().fits(self):
             self.rotation = (self.rotation + 2) % 4
             return False
         return True
