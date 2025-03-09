@@ -1,0 +1,14 @@
+Time taken:
+30 minutes
+
+Best time:
+1:01
+
+Speed:
+1.68 Pieces Per second
+
+Issues:
+Rotation is not correct.
+DAS is not instant.
+The held place is not visible.
+
