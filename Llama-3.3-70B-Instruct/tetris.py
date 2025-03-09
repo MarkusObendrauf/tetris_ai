@@ -92,7 +92,7 @@ class Tetris:
                     elif event.key == pygame.K_z:
                         self.rotate_piece(2)
                     elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
-                        self.hold_piece()
+                        self.hold()
                     elif event.key == pygame.K_v:
                         self.reset_game()
 
@@ -162,12 +162,14 @@ class Tetris:
             if self.piece_rotation < 0:
                 self.piece_rotation = 3
 
-    def hold_piece(self):
+    def hold(self):
         if self.hold_piece is None:
             self.hold_piece = self.piece
             self.spawn_piece()
         else:
-            self.piece, self.hold_piece = self.hold_piece, self.piece
+            temp = self.hold_piece
+            self.hold_piece = self.piece
+            self.piece = temp
 
     def check_collision(self):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
