@@ -152,15 +152,9 @@ class Tetris:
         self.lock_piece()
 
     def rotate_piece(self, dr):
-        self.piece_rotation += dr
-        if self.piece_rotation >= 4:
-            self.piece_rotation = 0
-        elif self.piece_rotation < 0:
-            self.piece_rotation = 3
+        self.piece_rotation = (self.piece_rotation + dr) % 4
         if self.check_collision():
-            self.piece_rotation -= dr
-            if self.piece_rotation < 0:
-                self.piece_rotation = 3
+            self.piece_rotation = (self.piece_rotation - dr) % 4
 
     def hold(self):
         if self.hold_piece is None:
@@ -244,7 +238,7 @@ class Tetris:
             for y, row in enumerate(piece_shape):
                 for x, val in enumerate(row):
                     if val:
-                        pygame.draw.rect(self.screen, color, ((x + 1) * BLOCK_SIZE + 200, (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+                        pygame.draw.rect(self.screen, color, ((x + 1) * BLOCK_SIZE + 50, (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
 
     def draw_next_pieces(self):
         for i, piece in enumerate(self.next_pieces):
