@@ -19,13 +19,11 @@ class Grid:
 
     def fits(self, active_tetramino):
         for x, y in active_tetramino.get_positions():
-            if y < 0:
-                continue
             if y >= Grid.HEIGHT:
                 return False
             if x >= Grid.WIDTH or x < 0:
                 return False
-            if self.grid[y][x] != (0, 0, 0):
+            if y >= 0 and self.grid[y][x] != (0, 0, 0):
                 return False
         return True
 
