@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 from queue import Queue
+from typing import Optional
 import pygame
 from active_tetramino import ActiveTetramino
 from grid import Grid
 from queue import QUEUE_PIECE_HEIGHT, VISIBLE_QUEUE_LENGTH
+
+from tetraminos import Tetramino
 
 pygame.font.init()
 FONT = pygame.font.Font(pygame.font.get_default_font(), 32)
@@ -26,12 +29,14 @@ DAS = 80
 class GameState:
     grid: Grid
     active_tetramino: ActiveTetramino
+    held_tetramino: Optional[Tetramino]
     queue: Queue
 
     fall_timer: int = 0
     right_held: bool = False
     right_das_timer: int = 0
     left_held: bool = False
+    hold_available: bool = True
     left_das_timer: int = 0
 
 
@@ -54,12 +59,22 @@ def draw(window: pygame.Surface, gs: GameState):
             BLOCK_SIZE * QUEUE_PIECE_HEIGHT * VISIBLE_QUEUE_LENGTH,
         ),
     )
+    hold_piece_surface = window.subsurface(
+        (
+            BLOCK_SIZE * 2,
+            WINDOW_HEIGHT - PLAY_HEIGHT + BLOCK_SIZE,
+            BLOCK_SIZE * 10,
+            BLOCK_SIZE * 15,
+        ),
+    )
 
     gs.grid.draw(grid_surface, BLOCK_SIZE)
     gs.active_tetramino.draw_ghost(grid_surface, BLOCK_SIZE)
     gs.active_tetramino.draw(grid_surface, BLOCK_SIZE)
     gs.queue.draw(queue_surface, BLOCK_SIZE)
     gs.grid.draw_gridlines(grid_surface, BLOCK_SIZE)
+    if gs.held_tetramino is not None:
+        ActiveTetramino(gs.held_tetramino, 1, 3).draw(hold_piece_surface, BLOCK_SIZE)
     pygame.display.update()
 
 
@@ -67,7 +82,7 @@ def main(window: pygame.Surface):
     queue = Queue()
     active_tetramino = ActiveTetramino(queue.pop())
 
-    gs = GameState(Grid.get(), active_tetramino, queue)
+    gs = GameState(Grid.get(), active_tetramino, None, queue)
 
     lock_piece = False
     run = True
@@ -121,6 +136,15 @@ def main(window: pygame.Surface):
                     while gs.active_tetramino.move_down():
                         pass
                     lock_piece = True
+                if event.key == pygame.K_LSHIFT and gs.hold_available:
+                    held_tetramino = gs.held_tetramino
+                    gs.held_tetramino = gs.active_tetramino.base_tetramino
+                    if held_tetramino is None:
+                        gs.active_tetramino = ActiveTetramino(queue.pop())
+                    else:
+                        gs.active_tetramino = ActiveTetramino(held_tetramino)
+                    gs.fall_timer = 0
+                    gs.hold_available = False
 
         if gs.left_das_timer > DAS:
             while gs.active_tetramino.move_left():
@@ -135,6 +159,7 @@ def main(window: pygame.Surface):
             gs.fall_timer = 0
             gs.active_tetramino = ActiveTetramino(queue.pop())
             lock_piece = False
+            gs.hold_available = True
 
         draw(window, gs)
 

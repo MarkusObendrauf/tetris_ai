@@ -5,10 +5,11 @@ from tetraminos import Tetramino
 
 
 class ActiveTetramino(Tetramino):
-    def __init__(self, tetramino: Tetramino):
-        self.x = 4
-        self.y = 2
+    def __init__(self, tetramino: Tetramino, x=4, y=2):
+        self.x = x
+        self.y = y
         self.rotation = 0
+        self.base_tetramino = tetramino
         super().__init__(tetramino.color, tetramino.shapes, tetramino.rotation_offsets)
 
     def move_left(self) -> bool:
