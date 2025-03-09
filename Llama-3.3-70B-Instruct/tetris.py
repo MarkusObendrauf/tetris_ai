@@ -63,6 +63,7 @@ class Tetris:
         self.time = 0
         self.das_timer = 0
         self.das_direction = 0
+        self.move_piece_timer = 0
 
     def run(self):
         running = True
@@ -90,7 +91,7 @@ class Tetris:
                         self.rotate_piece(1)
                     elif event.key == pygame.K_z:
                         self.rotate_piece(2)
-                    elif event.key == pygame.K_SHIFT:
+                    elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                         self.hold_piece()
                     elif event.key == pygame.K_v:
                         self.reset_game()
