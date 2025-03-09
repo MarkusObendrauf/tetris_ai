@@ -42,6 +42,7 @@ class GameState:
 
     lines_left: int = 40
     start_time: float = time()
+    started = False
 
 
 def draw(window: pygame.Surface, gs: GameState):
@@ -130,6 +131,9 @@ def main(window: pygame.Surface):
                     gs.right_das_timer = 0
 
             if event.type == pygame.KEYDOWN:
+                if not gs.started:
+                    gs.started = True
+                    gs.start_time = time()
                 if event.key == pygame.K_v:
                     gs.grid.reset()
                     main(window)
