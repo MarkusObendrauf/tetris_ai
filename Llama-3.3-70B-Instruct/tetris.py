@@ -152,9 +152,15 @@ class Tetris:
         self.lock_piece()
 
     def rotate_piece(self, dr):
-        self.piece_rotation = (self.piece_rotation + dr) % 4
-        if self.check_collision():
-            self.piece_rotation = (self.piece_rotation - dr) % 4
+        new_rotation = (self.piece_rotation + dr) % 4
+        piece_shape = ROTATIONS[self.piece][new_rotation]
+        for y, row in enumerate(piece_shape):
+            for x, val in enumerate(row):
+                if val and (self.piece_x + x < 0 or self.piece_x + x >= GRID_WIDTH or
+                            self.piece_y + y < 0 or self.piece_y + y >= GRID_HEIGHT or
+                            self.grid[self.piece_y + y][self.piece_x + x]):
+                    return
+        self.piece_rotation = new_rotation
 
     def hold(self):
         if self.hold_piece is None:
