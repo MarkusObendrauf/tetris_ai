@@ -197,13 +197,23 @@ class Tetris:
 
     def draw_ghost_piece(self):
         piece_shape = ROTATIONS[self.piece][self.piece_rotation]
+        ghost_y = self.piece_y
+        while ghost_y + len(piece_shape) < GRID_HEIGHT and not self.check_collision_ghost(ghost_y + 1):
+            ghost_y += 1
         for y, row in enumerate(piece_shape):
             for x, val in enumerate(row):
                 if val:
-                    ghost_y = self.piece_y + y
-                    while ghost_y + 1 < GRID_HEIGHT and not self.check_collision(ghost_y + 1):
-                        ghost_y += 1
-                    pygame.draw.rect(self.screen, GRAY, ((self.piece_x + x) * BLOCK_SIZE, ghost_y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
+                    pygame.draw.rect(self.screen, GRAY, ((self.piece_x + x) * BLOCK_SIZE, (ghost_y + y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
+
+    def check_collision_ghost(self, dy):
+        piece_shape = ROTATIONS[self.piece][self.piece_rotation]
+        for y, row in enumerate(piece_shape):
+            for x, val in enumerate(row):
+                if val and (self.piece_x + x < 0 or self.piece_x + x >= GRID_WIDTH or
+                            self.piece_y + dy + y < 0 or self.piece_y + dy + y >= GRID_HEIGHT or
+                            self.grid[self.piece_y + dy + y][self.piece_x + x]):
+                    return True
+        return False
 
     def draw_hold_piece(self):
         if self.hold_piece:
