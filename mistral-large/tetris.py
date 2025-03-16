@@ -51,7 +51,7 @@ start_time = time.time()
 game_over = False
 das_timer = 0
 das_delay = 160  # DAS delay in milliseconds
-arr_delay = 50   # ARR delay in milliseconds
+arr_delay = 10   # ARR delay in milliseconds
 last_move_time = 0
 
 # Initialize next pieces queue
@@ -60,8 +60,8 @@ next_pieces = generate_bag() + generate_bag()
 # Function to create a new piece
 def new_piece():
     global current_piece, next_pieces, hold_used
-    if not next_pieces:
-        next_pieces = generate_bag()
+    if len(next_pieces) <= 5:
+        next_pieces.extend(generate_bag())
     shape = next_pieces.pop(0)
     current_piece = {'shape': SHAPES[shape], 'color': shape + 1, 'x': GRID_WIDTH // 2 - 2, 'y': 0}
     hold_used = False
@@ -228,12 +228,12 @@ while not game_over:
     current_time = pygame.time.get_ticks()
     if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
         if current_time - das_timer > das_delay:
-            if current_time - last_move_time > arr_delay:
+            while current_time - last_move_time > arr_delay:
                 if keys[pygame.K_LEFT]:
                     move_piece(-1, 0)
                 elif keys[pygame.K_RIGHT]:
                     move_piece(1, 0)
-                last_move_time = current_time
+                last_move_time += arr_delay
 
     if lines_cleared >= 40:
         end_time = time.time()
