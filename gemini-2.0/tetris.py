@@ -15,7 +15,6 @@ ARR = 0.0  # 0ms
 SOFT_DROP_SPEED = 20  # Effectively instant
 LOCK_DELAY = 0.5
 PREVIEW_COUNT = 5
-hard_dropping = False
 
 # Colors (Tetris Guideline)
 COLORS = {
@@ -114,7 +113,7 @@ def get_new_piece(bag, next_pieces):
         bag = create_bag()
     next_piece = bag.pop(0)
     next_pieces.append(next_piece)
-    return next_piece, bag, next_pieces
+    return next_piece, bag
 
 
 def init_piece(piece_type):
@@ -140,7 +139,7 @@ def rotate_180(piece):
 def check_collision(grid, piece):
     for x, y in SHAPES[piece['type']][piece['rotation']]:
         grid_x, grid_y = int(piece['x'] + x), int(piece['y'] + y)
-        if grid_x < 0 or grid_x >= GRID_WIDTH or grid_y >= GRID_HEIGHT or (grid_y >= 0 and grid[grid_y][grid_x] != 0):
+        if grid_x < 0 or grid_x >= GRID_WIDTH or grid_y < 0 or grid_y >= GRID_HEIGHT or (grid_y >= 0 and grid[grid_y][grid_x] != 0):
             return True
     return False
 
@@ -241,9 +240,13 @@ def game():
     bag = create_bag()
     next_pieces = []
     for _ in range(PREVIEW_COUNT):
-        new_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
-    current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
+        piece, bag = get_new_piece(bag, next_pieces)
+        next_pieces.append(piece)
+
+    current_piece, bag = get_new_piece(bag, next_pieces)
+    next_pieces.pop(0)
     current_piece = init_piece(current_piece)
+
     held_piece = None
     can_hold = True
     game_over = False
@@ -253,18 +256,22 @@ def game():
     arr_timer = 0
     last_move_direction = 0  # -1 for left, 1 for right
     lock_delay_timer = 0
-
-    while next_pieces and len(next_pieces) > PREVIEW_COUNT:
-        next_pieces.pop(0)
+    hard_dropping = False
+    rotating_right = False
+    rotating_left = False
+    rotating_180 = False
 
     def reset():
-        nonlocal grid, bag, next_pieces, current_piece, held_piece, can_hold, game_over, lines_cleared, start_time, das_timer, arr_timer, last_move_direction, lock_delay_timer
+        nonlocal grid, bag, next_pieces, current_piece, held_piece, can_hold, game_over, lines_cleared, start_time, das_timer, arr_timer, last_move_direction, lock_delay_timer, hard_dropping, rotating_right, rotating_left, rotating_180
         grid = [[0] * GRID_WIDTH for _ in range(GRID_HEIGHT)]
         bag = create_bag()
         next_pieces = []
         for _ in range(PREVIEW_COUNT):
-            new_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
-        current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
+            piece, bag = get_new_piece(bag, next_pieces)
+            next_pieces.append(piece)
+
+        current_piece, bag = get_new_piece(bag, next_pieces)
+        next_pieces.pop(0)
         current_piece = init_piece(current_piece)
         held_piece = None
         can_hold = True
@@ -275,6 +282,10 @@ def game():
         arr_timer = 0
         last_move_direction = 0
         lock_delay_timer = 0
+        hard_dropping = False
+        rotating_right = False
+        rotating_left = False
+        rotating_180 = False
 
     # Main game loop
     running = True
@@ -316,7 +327,7 @@ def game():
                 das_timer -= delta_time
             last_move_direction = move_direction
         else:
-            last_move_direction = move_direction
+            last_move_direction = 0
 
         if move_direction != 0 and attempt_move:
             new_x = current_piece['x'] + move_direction
@@ -343,8 +354,12 @@ def game():
             place_piece(grid, current_piece)
             grid, lines = clear_lines(grid)
             lines_cleared += lines
-            current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
-            current_piece = init_piece(current_piece)
+
+            # Get new piece and add to next_pieces queue
+            new_piece, bag = get_new_piece(bag, next_pieces)
+            next_pieces.append(new_piece)
+            current_piece = init_piece(next_pieces.pop(0))
+
             can_hold = True
             lock_delay_timer = 0
             if check_collision(grid, current_piece):
@@ -354,7 +369,8 @@ def game():
             hard_dropping = False
 
         # Rotate right
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] and not rotating_right:
+            rotating_right = True
             new_rotation = (current_piece['rotation'] + 1) % 4
             new_piece = {**current_piece, 'rotation': new_rotation}
             kicked_piece = kick(grid, current_piece, new_piece)
@@ -362,8 +378,12 @@ def game():
                 current_piece = kicked_piece
                 lock_delay_timer = 0  # Reset lock delay on successful move
 
+        if not keys[pygame.K_UP]:
+            rotating_right = False
+
         # Rotate left
-        if keys[pygame.K_x]:
+        if keys[pygame.K_x] and not rotating_left:
+            rotating_left = True
             new_rotation = (current_piece['rotation'] - 1) % 4
             new_piece = {**current_piece, 'rotation': new_rotation}
             kicked_piece = kick(grid, current_piece, new_piece)
@@ -371,8 +391,12 @@ def game():
                 current_piece = kicked_piece
                 lock_delay_timer = 0  # Reset lock delay on successful move
 
+        if not keys[pygame.K_x]:
+            rotating_left = False
+
         # Rotate 180
-        if keys[pygame.K_z]:
+        if keys[pygame.K_z] and not rotating_180:
+            rotating_180 = True
             new_rotation = (current_piece['rotation'] + 2) % 4
             new_piece = {**current_piece, 'rotation': new_rotation}
             kicked_piece = kick_180(grid, current_piece, new_piece)
@@ -380,13 +404,17 @@ def game():
                 current_piece = kicked_piece
                 lock_delay_timer = 0  # Reset lock delay on successful move
 
+        if not keys[pygame.K_z]:
+            rotating_180 = False
+
         # Hold piece
         if keys[pygame.K_LSHIFT] and can_hold:
             can_hold = False
             if held_piece is None:
                 held_piece = current_piece['type']
-                current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
-                current_piece = init_piece(current_piece)
+                new_piece, bag = get_new_piece(bag, next_pieces)
+                next_pieces.append(new_piece)
+                current_piece = init_piece(next_pieces.pop(0))
             else:
                 held_piece, current_piece['type'] = current_piece['type'], held_piece
                 current_piece = init_piece(current_piece['type'])
@@ -405,8 +433,12 @@ def game():
                     place_piece(grid, current_piece)
                     grid, lines = clear_lines(grid)
                     lines_cleared += lines
-                    current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
-                    current_piece = init_piece(current_piece)
+
+                    # Get new piece and add to next_pieces queue
+                    new_piece, bag = get_new_piece(bag, next_pieces)
+                    next_pieces.append(new_piece)
+                    current_piece = init_piece(next_pieces.pop(0))
+
                     can_hold = True
                     lock_delay_timer = 0
                     if check_collision(grid, current_piece):
@@ -414,7 +446,11 @@ def game():
 
         # Drawing
         draw_grid(screen, grid)
-        draw_ghost_piece(screen, grid, current_piece)
+
+        # Fix ghost piece jitter by using integer y position for ghost piece calculation
+        ghost_piece = {**current_piece, 'y': int(current_piece['y'])}
+        draw_ghost_piece(screen, grid, ghost_piece)
+
         draw_piece(screen, current_piece)
         draw_hold(screen, held_piece)
         draw_next_pieces(screen, next_pieces)
