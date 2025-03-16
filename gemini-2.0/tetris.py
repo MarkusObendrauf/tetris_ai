@@ -314,19 +314,30 @@ def game():
             move_direction = 1
 
         if move_direction != 0:
-            # Move instantly to the edge
-            new_x = current_piece['x']
-            while True:
-                new_x += move_direction
-                new_piece = {**current_piece, 'x': new_x}
-                if check_collision(grid, new_piece):
-                    new_x -= move_direction
-                    break
-                current_piece = {**current_piece, 'x': new_x}
-            lock_delay_timer = 0
+            if last_move_direction != move_direction:
+                das_timer = DAS
+                arr_timer = 0
+                attempt_move = True
+            elif das_timer <= 0:
+                if arr_timer <= 0:
+                    attempt_move = True
+                    arr_timer = ARR
+                else:
+                    attempt_move = False
+                    arr_timer -= delta_time
+            else:
+                attempt_move = False
+                das_timer -= delta_time
             last_move_direction = move_direction
         else:
             last_move_direction = 0
+
+        if move_direction != 0 and attempt_move:
+            new_x = current_piece['x'] + move_direction
+            new_piece = {**current_piece, 'x': new_x}
+            if not check_collision(grid, new_piece):
+                current_piece = new_piece
+                lock_delay_timer = 0  # Reset lock delay on successful move
 
         # Soft drop
         if keys[pygame.K_DOWN]:
