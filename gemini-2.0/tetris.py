@@ -108,11 +108,10 @@ def create_bag():
     return bag
 
 
-def get_new_piece(bag, next_pieces):
+def get_new_piece(bag):
     if not bag:
         bag = create_bag()
     next_piece = bag.pop(0)
-    next_pieces.append(next_piece)
     return next_piece, bag
 
 
@@ -239,13 +238,13 @@ def game():
     grid = [[0] * GRID_WIDTH for _ in range(GRID_HEIGHT)]
     bag = create_bag()
     next_pieces = []
-    for _ in range(PREVIEW_COUNT):
-        piece, bag = get_new_piece(bag, next_pieces)
+
+    # Initialize the queue with the first 6 pieces
+    for _ in range(PREVIEW_COUNT + 1):
+        piece, bag = get_new_piece(bag)
         next_pieces.append(piece)
 
-    current_piece, bag = get_new_piece(bag, next_pieces)
-    next_pieces.pop(0)
-    current_piece = init_piece(current_piece)
+    current_piece = init_piece(next_pieces.pop(0))
 
     held_piece = None
     can_hold = True
@@ -260,19 +259,20 @@ def game():
     rotating_right = False
     rotating_left = False
     rotating_180 = False
+    key_repeat_delay = {}  # Dictionary to store key repeat delays
 
     def reset():
-        nonlocal grid, bag, next_pieces, current_piece, held_piece, can_hold, game_over, lines_cleared, start_time, das_timer, arr_timer, last_move_direction, lock_delay_timer, hard_dropping, rotating_right, rotating_left, rotating_180
+        nonlocal grid, bag, next_pieces, current_piece, held_piece, can_hold, game_over, lines_cleared, start_time, das_timer, arr_timer, last_move_direction, lock_delay_timer, hard_dropping, rotating_right, rotating_left, rotating_180, key_repeat_delay
         grid = [[0] * GRID_WIDTH for _ in range(GRID_HEIGHT)]
         bag = create_bag()
         next_pieces = []
-        for _ in range(PREVIEW_COUNT):
-            piece, bag = get_new_piece(bag, next_pieces)
+
+        # Initialize the queue with the first 6 pieces
+        for _ in range(PREVIEW_COUNT + 1):
+            piece, bag = get_new_piece(bag)
             next_pieces.append(piece)
 
-        current_piece, bag = get_new_piece(bag, next_pieces)
-        next_pieces.pop(0)
-        current_piece = init_piece(current_piece)
+        current_piece = init_piece(next_pieces.pop(0))
         held_piece = None
         can_hold = True
         game_over = False
@@ -286,6 +286,7 @@ def game():
         rotating_right = False
         rotating_left = False
         rotating_180 = False
+        key_repeat_delay = {}
 
     # Main game loop
     running = True
@@ -300,6 +301,8 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_v:
                     reset()
+                # Initialize key repeat delay on key down
+                key_repeat_delay[event.key] = 0 if event.key not in [pygame.K_LEFT, pygame.K_RIGHT] else DAS
 
         keys = pygame.key.get_pressed()
 
@@ -356,8 +359,8 @@ def game():
             lines_cleared += lines
 
             # Get new piece and add to next_pieces queue
-            new_piece, bag = get_new_piece(bag, next_pieces)
-            next_pieces.append(new_piece)
+            piece, bag = get_new_piece(bag)
+            next_pieces.append(piece)
             current_piece = init_piece(next_pieces.pop(0))
 
             can_hold = True
@@ -412,8 +415,8 @@ def game():
             can_hold = False
             if held_piece is None:
                 held_piece = current_piece['type']
-                new_piece, bag = get_new_piece(bag, next_pieces)
-                next_pieces.append(new_piece)
+                piece, bag = get_new_piece(bag)
+                next_pieces.append(piece)
                 current_piece = init_piece(next_pieces.pop(0))
             else:
                 held_piece, current_piece['type'] = current_piece['type'], held_piece
@@ -435,8 +438,8 @@ def game():
                     lines_cleared += lines
 
                     # Get new piece and add to next_pieces queue
-                    new_piece, bag = get_new_piece(bag, next_pieces)
-                    next_pieces.append(new_piece)
+                    piece, bag = get_new_piece(bag)
+                    next_pieces.append(piece)
                     current_piece = init_piece(next_pieces.pop(0))
 
                     can_hold = True
