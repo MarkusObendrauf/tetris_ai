@@ -82,6 +82,7 @@ WALL_KICK_DATA = {
 }
 
 # Generate all rotations for each tetromino
+# In the generate_bag method, modify the I piece rotation generation:
 for piece in TETROMINOS:
     if piece == 'O':
         # O piece doesn't rotate
@@ -94,13 +95,14 @@ for piece in TETROMINOS:
         for i in range(1, 4):
             prev_rotation = rotations[i-1]
             if piece == 'I':
-                # I piece rotates around its center
-                center = (1.5, 0.5) if i % 2 == 1 else (1.5, 1.5)
-                new_rotation = []
-                for x, y in prev_rotation:
-                    rx, ry = x - center[0], y - center[1]
-                    nx, ny = -ry + center[0], rx + center[1]
-                    new_rotation.append((int(nx), int(ny)))
+                # I piece rotates around its center with proper offsets
+                if i == 1:  # 0->1 rotation (horizontal to vertical)
+                    new_rotation = [(1, 0), (1, 1), (1, 2), (1, 3)]
+                elif i == 2:  # 1->2 rotation (vertical to horizontal)
+                    new_rotation = [(0, 2), (1, 2), (2, 2), (3, 2)]
+                elif i == 3:  # 2->3 rotation (horizontal to vertical)
+                    new_rotation = [(2, 0), (2, 1), (2, 2), (2, 3)]
+                rotations.append(new_rotation)
             else:
                 # Other pieces rotate around (1,1)
                 center = (1, 1)
@@ -110,7 +112,7 @@ for piece in TETROMINOS:
                     nx, ny = -ry + center[0], rx + center[1]
                     new_rotation.append((int(nx), int(ny)))
 
-            rotations.append(new_rotation)
+                rotations.append(new_rotation)
 
         TETROMINOS[piece]['shape'] = rotations
 
