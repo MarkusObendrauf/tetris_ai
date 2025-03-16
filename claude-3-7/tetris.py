@@ -292,7 +292,7 @@ class Tetris:
             if all(cell is not None for cell in self.board[y]):
                 lines_to_clear.append(y)
 
-        for y in lines_to_clear:
+        for y in sorted(lines_to_clear, reverse=True):
             # Remove the line
             self.board.pop(y)
             # Add a new empty line at the top
@@ -301,6 +301,9 @@ class Tetris:
         self.lines_cleared += len(lines_to_clear)
 
     def handle_input(self):
+        keys = pygame.key.get_pressed()
+        current_time = pygame.time.get_ticks()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -315,8 +318,7 @@ class Tetris:
                 if event.key == pygame.K_LEFT:
                     self.move(-1, 0)
                     self.das_direction = "LEFT"
-                    self.das_timer = pygame.time.get_ticks()
+                    self.das_timer = current_time
                 elif event.key == pygame.K_RIGHT:
                     self.move(1, 0)
-                    self.das_direction = "RIGHT"
-                    self.das_timer = pygame.time
+                    self.das_direction =
