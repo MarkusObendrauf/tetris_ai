@@ -10,27 +10,27 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 300, 600
 GRID_SIZE = 30
 GRID_WIDTH, GRID_HEIGHT = SCREEN_WIDTH // GRID_SIZE, SCREEN_HEIGHT // GRID_SIZE
 
-# Colors
+# Colors according to the Tetris Guideline
 COLORS = [
-    (0, 0, 0),
-    (255, 0, 0),
-    (0, 255, 0),
-    (0, 0, 255),
-    (255, 255, 0),
-    (255, 165, 0),
-    (128, 0, 128),
-    (0, 255, 255)
+    (0, 0, 0),        # Empty
+    (0, 255, 255),    # I
+    (0, 0, 255),      # J
+    (255, 165, 0),    # L
+    (255, 255, 0),    # O
+    (0, 255, 0),      # S
+    (128, 0, 128),    # T
+    (255, 0, 0)       # Z
 ]
 
 # Tetrimino shapes
 SHAPES = [
-    [[1, 1, 1, 1]],
-    [[1, 1], [1, 1]],
-    [[0, 1, 0], [1, 1, 1]],
-    [[1, 0, 0], [1, 1, 1]],
-    [[0, 0, 1], [1, 1, 1]],
-    [[1, 1, 0], [0, 1, 1]],
-    [[0, 1, 1], [1, 1, 0]]
+    [[1, 1, 1, 1]],   # I
+    [[2, 0, 0], [2, 2, 2]],  # J
+    [[0, 0, 3], [3, 3, 3]],  # L
+    [[4, 4], [4, 4]],  # O
+    [[0, 5, 5], [5, 5, 0]],  # S
+    [[6, 6, 6], [0, 6, 0]],  # T
+    [[7, 7, 0], [0, 7, 7]]   # Z
 ]
 
 # Tetris Guideline randomizer
@@ -49,6 +49,8 @@ score = 0
 lines_cleared = 0
 start_time = time.time()
 game_over = False
+das_timer = 0
+das_delay = 80  # DAS delay in milliseconds
 
 # Initialize next pieces queue
 next_pieces = generate_bag() + generate_bag()
@@ -89,10 +91,11 @@ def join_piece():
 def clear_lines():
     global score, lines_cleared
     new_grid = [row for row in grid if any(cell == 0 for cell in row)]
-    lines_cleared += GRID_HEIGHT - len(new_grid)
-    score += lines_cleared
+    cleared_lines = GRID_HEIGHT - len(new_grid)
+    lines_cleared += cleared_lines
+    score += cleared_lines
     grid[:len(new_grid)] = new_grid
-    grid[len(new_grid):] = [[0] * GRID_WIDTH for _ in range(GRID_HEIGHT - len(new_grid))]
+    grid[len(new_grid):] = [[0] * GRID_WIDTH for _ in range(cleared_lines)]
 
 # Function to rotate piece
 def rotate_piece(shape, clockwise=True):
@@ -183,8 +186,10 @@ while not game_over:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 move_piece(-1, 0)
+                das_timer = pygame.time.get_ticks()
             elif event.key == pygame.K_RIGHT:
                 move_piece(1, 0)
+                das_timer = pygame.time.get_ticks()
             elif event.key == pygame.K_DOWN:
                 if not move_piece(0, 1):
                     join_piece()
@@ -211,6 +216,16 @@ while not game_over:
                 lines_cleared = 0
                 start_time = time.time()
                 new_piece()
+
+    # DAS implementation
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
+        if pygame.time.get_ticks() - das_timer > das_delay:
+            if keys[pygame.K_LEFT]:
+                move_piece(-1, 0)
+            elif keys[pygame.K_RIGHT]:
+                move_piece(1, 0)
+            das_timer = pygame.time.get_ticks()
 
     if lines_cleared >= 40:
         end_time = time.time()
