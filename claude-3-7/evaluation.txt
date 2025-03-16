@@ -1,0 +1,11 @@
+Time taken:
+25 minutes
+
+Best time:
+42
+
+Speed:
+2.48 Pieces Per second
+
+Issues:
+None, game is basically perfect
