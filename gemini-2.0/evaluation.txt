@@ -1,0 +1,12 @@
+Time taken:
+20 minutes
+
+Best time:
+1:22
+
+Speed:
+1.26 Pieces Per second
+
+Issues:
+DAS/ARR doesn't work properly.
+Rotation is not correctly implemented.
