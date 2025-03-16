@@ -293,9 +293,13 @@ class Tetris:
             if all(cell is not None for cell in self.board[y]):
                 lines_to_clear.append(y)
 
+        if not lines_to_clear:
+            return
+
+        # Clear the lines
         for y in sorted(lines_to_clear, reverse=True):
             # Remove the line
-            self.board.pop(y)
+            del self.board[y]
             # Add a new empty line at the top
             self.board.insert(0, [None for _ in range(GRID_WIDTH)])
 
