@@ -547,7 +547,7 @@ class Tetris:
         while True:
             self.handle_input()
             self.draw_board()
-            self.clock.tick(60)
+            self.clock.tick()
 
 # Create and run the game
 if __name__ == "__main__":
