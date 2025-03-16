@@ -81,7 +81,6 @@ WALL_KICK_DATA = {
     ]
 }
 
-# Generate all rotations for each tetromino
 # In the generate_bag method, modify the I piece rotation generation:
 for piece in TETROMINOS:
     if piece == 'O':
@@ -95,13 +94,13 @@ for piece in TETROMINOS:
         for i in range(1, 4):
             prev_rotation = rotations[i-1]
             if piece == 'I':
-                # I piece rotates around its center with proper offsets
+                # I piece rotations with swapped left/right orientations
                 if i == 1:  # 0->1 rotation (horizontal to vertical)
-                    new_rotation = [(1, 0), (1, 1), (1, 2), (1, 3)]
+                    new_rotation = [(2, 0), (2, 1), (2, 2), (2, 3)]  # Now right side
                 elif i == 2:  # 1->2 rotation (vertical to horizontal)
                     new_rotation = [(0, 2), (1, 2), (2, 2), (3, 2)]
                 elif i == 3:  # 2->3 rotation (horizontal to vertical)
-                    new_rotation = [(2, 0), (2, 1), (2, 2), (2, 3)]
+                    new_rotation = [(1, 0), (1, 1), (1, 2), (1, 3)]  # Now left side
                 rotations.append(new_rotation)
             else:
                 # Other pieces rotate around (1,1)
@@ -374,7 +373,8 @@ class Tetris:
             s.set_alpha(alpha)
             s.fill(color)
             self.screen.blit(s, (BOARD_X + x * GRID_SIZE, BOARD_Y + y * GRID_SIZE))
-            pygame.draw.rect(self.screen, WHITE, rect, 1)
+            # Remove this line to remove the white gridlines on tetrominos
+            # pygame.draw.rect(self.screen, WHITE, rect, 1)
 
     def draw_piece(self, piece, rotation, pos, alpha=255, outline=False):
         blocks = self.get_piece_blocks(piece, rotation, pos)
@@ -444,8 +444,8 @@ class Tetris:
                 y = hold_y + (block_y + offset_y) * GRID_SIZE * 0.8
                 pygame.draw.rect(self.screen, TETROMINOS[self.hold_piece]['color'],
                                 (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8))
-                pygame.draw.rect(self.screen, WHITE,
-                                (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8), 1)
+                # pygame.draw.rect(self.screen, WHITE,
+                #                 (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8), 1)
 
         # Draw next pieces
         next_text = self.font.render("NEXT", True, WHITE)
@@ -473,8 +473,8 @@ class Tetris:
                 y = next_y + (block_y + offset_y) * GRID_SIZE * 0.8
                 pygame.draw.rect(self.screen, TETROMINOS[next_piece]['color'],
                                 (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8))
-                pygame.draw.rect(self.screen, WHITE,
-                                (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8), 1)
+                # pygame.draw.rect(self.screen, WHITE,
+                #                 (x, y, GRID_SIZE * 0.8, GRID_SIZE * 0.8), 1)
 
         # Draw lines cleared
         lines_text = self.font.render(f"LINES: {self.lines_cleared}/40", True, WHITE)
