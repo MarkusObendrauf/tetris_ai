@@ -424,7 +424,7 @@ class Tetris:
         # Draw ghost piece
         if self.state == GameState.PLAYING:
             ghost_pos = self.get_ghost_position()
-            self.draw_piece(self.current_piece, self.current_rotation, ghost_pos, 100, True)
+            self.draw_piece(self.current_piece, self.current_rotation, ghost_pos, 128, False)
 
         # Draw current piece
         if self.state == GameState.PLAYING:
