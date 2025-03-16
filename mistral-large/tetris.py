@@ -29,7 +29,7 @@ SHAPES = [
     [[0, 0, 3], [3, 3, 3]],  # L
     [[4, 4], [4, 4]],  # O
     [[0, 5, 5], [5, 5, 0]],  # S
-    [[6, 6, 6], [0, 6, 0]],  # T
+    [[0, 6, 0], [6, 6, 6]],  # T (rotated 180 degrees to point up)
     [[7, 7, 0], [0, 7, 7]]   # Z
 ]
 
@@ -50,7 +50,7 @@ lines_cleared = 0
 start_time = time.time()
 game_over = False
 das_timer = 0
-das_delay = 160  # DAS delay in milliseconds
+das_delay = 80  # DAS delay in milliseconds
 arr_delay = 10   # ARR delay in milliseconds
 last_move_time = 0
 
