@@ -50,7 +50,9 @@ lines_cleared = 0
 start_time = time.time()
 game_over = False
 das_timer = 0
-das_delay = 80  # DAS delay in milliseconds
+das_delay = 160  # DAS delay in milliseconds
+arr_delay = 50   # ARR delay in milliseconds
+last_move_time = 0
 
 # Initialize next pieces queue
 next_pieces = generate_bag() + generate_bag()
@@ -63,6 +65,8 @@ def new_piece():
     shape = next_pieces.pop(0)
     current_piece = {'shape': SHAPES[shape], 'color': shape + 1, 'x': GRID_WIDTH // 2 - 2, 'y': 0}
     hold_used = False
+    if check_collision(current_piece['shape'], (current_piece['x'], current_piece['y'])):
+        game_over = True
 
 # Function to check collision
 def check_collision(shape, offset):
@@ -84,8 +88,6 @@ def join_piece():
                 grid[y + off_y][x + off_x] = current_piece['color']
     clear_lines()
     new_piece()
-    if check_collision(current_piece['shape'], (current_piece['x'], current_piece['y'])):
-        game_over = True
 
 # Function to clear lines
 def clear_lines():
@@ -94,8 +96,10 @@ def clear_lines():
     cleared_lines = GRID_HEIGHT - len(new_grid)
     lines_cleared += cleared_lines
     score += cleared_lines
-    grid[:len(new_grid)] = new_grid
-    grid[len(new_grid):] = [[0] * GRID_WIDTH for _ in range(cleared_lines)]
+    for y in range(cleared_lines, GRID_HEIGHT):
+        grid[y] = new_grid[y - cleared_lines]
+    for y in range(cleared_lines):
+        grid[y] = [0] * GRID_WIDTH
 
 # Function to rotate piece
 def rotate_piece(shape, clockwise=True):
@@ -187,9 +191,11 @@ while not game_over:
             if event.key == pygame.K_LEFT:
                 move_piece(-1, 0)
                 das_timer = pygame.time.get_ticks()
+                last_move_time = das_timer
             elif event.key == pygame.K_RIGHT:
                 move_piece(1, 0)
                 das_timer = pygame.time.get_ticks()
+                last_move_time = das_timer
             elif event.key == pygame.K_DOWN:
                 if not move_piece(0, 1):
                     join_piece()
@@ -217,15 +223,17 @@ while not game_over:
                 start_time = time.time()
                 new_piece()
 
-    # DAS implementation
+    # DAS and ARR implementation
     keys = pygame.key.get_pressed()
+    current_time = pygame.time.get_ticks()
     if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
-        if pygame.time.get_ticks() - das_timer > das_delay:
-            if keys[pygame.K_LEFT]:
-                move_piece(-1, 0)
-            elif keys[pygame.K_RIGHT]:
-                move_piece(1, 0)
-            das_timer = pygame.time.get_ticks()
+        if current_time - das_timer > das_delay:
+            if current_time - last_move_time > arr_delay:
+                if keys[pygame.K_LEFT]:
+                    move_piece(-1, 0)
+                elif keys[pygame.K_RIGHT]:
+                    move_piece(1, 0)
+                last_move_time = current_time
 
     if lines_cleared >= 40:
         end_time = time.time()
