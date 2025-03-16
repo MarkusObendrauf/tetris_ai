@@ -296,12 +296,20 @@ class Tetris:
         if not lines_to_clear:
             return
 
-        # Clear the lines
-        for y in sorted(lines_to_clear, reverse=True):
-            # Remove the line
-            del self.board[y]
-            # Add a new empty line at the top
-            self.board.insert(0, [None for _ in range(GRID_WIDTH)])
+        # Create a new board with cleared lines removed
+        new_board = []
+
+        # Add empty lines at the top (equal to number of cleared lines)
+        for _ in range(len(lines_to_clear)):
+            new_board.append([None for _ in range(GRID_WIDTH)])
+
+        # Copy non-cleared lines to the new board
+        for y in range(GRID_HEIGHT):
+            if y not in lines_to_clear:
+                new_board.append(self.board[y])
+
+        # Update the board
+        self.board = new_board[:GRID_HEIGHT]  # Ensure we don't exceed grid height
 
         self.lines_cleared += len(lines_to_clear)
 
