@@ -138,7 +138,7 @@ def rotate_180(piece):
 
 def check_collision(grid, piece):
     for x, y in SHAPES[piece['type']][piece['rotation']]:
-        grid_x, grid_y = piece['x'] + x, piece['y'] + y
+        grid_x, grid_y = int(piece['x'] + x), int(piece['y'] + y)
         if grid_x < 0 or grid_x >= GRID_WIDTH or grid_y >= GRID_HEIGHT or (grid_y >= 0 and grid[grid_y][grid_x] != 0):
             return True
     return False
@@ -182,7 +182,7 @@ def hard_drop(grid, piece):
 def place_piece(grid, piece):
     for x, y in SHAPES[piece['type']][piece['rotation']]:
         grid_x, grid_y = piece['x'] + x, piece['y'] + y
-        grid[grid_y][grid_x] = piece['type']
+        grid[int(grid_y)][int(grid_x)] = piece['type']
 
 
 def clear_lines(grid):
@@ -240,7 +240,7 @@ def game():
     bag = create_bag()
     next_pieces = []
     for _ in range(PREVIEW_COUNT):
-        bag, next_pieces = get_new_piece(bag, next_pieces)[1:]
+        new_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
     current_piece, bag, next_pieces = get_new_piece(bag, next_pieces)
     current_piece = init_piece(current_piece)
     held_piece = None
@@ -313,6 +313,8 @@ def game():
             else:
                 attempt_move = False
                 das_timer -= delta_time
+            last_move_direction = move_direction
+        else:
             last_move_direction = move_direction
 
         if move_direction != 0 and attempt_move:
