@@ -1,0 +1,12 @@
+Time taken:
+20 minutes
+
+Best time:
+60
+
+Speed:
+1.66 Pieces Per second
+
+Issues:
+Rotation not implemented correctly.
+Queue not visible.
