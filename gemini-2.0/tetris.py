@@ -15,6 +15,7 @@ ARR = 0.0  # 0ms
 SOFT_DROP_SPEED = 20  # Effectively instant
 LOCK_DELAY = 0.5
 PREVIEW_COUNT = 5
+hard_dropping = False
 
 # Colors (Tetris Guideline)
 COLORS = {
@@ -336,7 +337,8 @@ def game():
                 pass  # Do nothing if soft drop fails
 
         # Hard drop
-        if keys[pygame.K_c]:
+        if keys[pygame.K_c] and not hard_dropping:
+            hard_dropping = True
             current_piece, drop = hard_drop(grid, current_piece)
             place_piece(grid, current_piece)
             grid, lines = clear_lines(grid)
@@ -347,6 +349,9 @@ def game():
             lock_delay_timer = 0
             if check_collision(grid, current_piece):
                 game_over = True
+
+        if not keys[pygame.K_c]:
+            hard_dropping = False
 
         # Rotate right
         if keys[pygame.K_UP]:
