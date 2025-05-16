@@ -435,9 +435,12 @@ class Tetris:
 
                 # Handle DAS (Delayed Auto Shift)
                 if das_direction is not None and keys[das_direction]:
+                    # Check if we should activate DAS
                     if not das_active and current_time - das_time >= 0.08:  # 80ms DAS
                         das_active = True
-                        # Move instantly to the edge when DAS activates
+
+                    # If DAS is active, keep moving to the edge
+                    if das_active:
                         dx = -1 if das_direction == pygame.K_LEFT else 1
                         while self.move_piece(dx, 0):
                             pass
