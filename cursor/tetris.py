@@ -437,11 +437,10 @@ class Tetris:
                 if das_direction is not None and keys[das_direction]:
                     if not das_active and current_time - das_time >= 0.08:  # 80ms DAS
                         das_active = True
-
-                    if das_active:
-                        # Keep trying to move while in DAS state
+                        # Move instantly to the edge when DAS activates
                         dx = -1 if das_direction == pygame.K_LEFT else 1
-                        self.move_piece(dx, 0)
+                        while self.move_piece(dx, 0):
+                            pass
 
                 elif das_time is None:
                     # Check for new key presses
