@@ -32,28 +32,49 @@ COLORS = {
 }
 
 # Tetromino shapes following Guideline
+# Each piece has 4 rotations: 0 (spawn), R (right), 2 (180), L (left)
 TETROMINOES = {
-    "I": [[(0, 1), (1, 1), (2, 1), (3, 1)], [(2, 0), (2, 1), (2, 2), (2, 3)]],
-    "O": [[(1, 0), (2, 0), (1, 1), (2, 1)]],
-    "T": [
-        [(1, 0), (0, 1), (1, 1), (2, 1)],
-        [(1, 0), (1, 1), (2, 1), (1, 2)],
-        [(0, 1), (1, 1), (2, 1), (1, 2)],
-        [(1, 0), (0, 1), (1, 1), (1, 2)],
+    "I": [
+        [(0, 1), (1, 1), (2, 1), (3, 1)],  # 0
+        [(2, 0), (2, 1), (2, 2), (2, 3)],  # R
+        [(0, 2), (1, 2), (2, 2), (3, 2)],  # 2
+        [(1, 0), (1, 1), (1, 2), (1, 3)],  # L
     ],
-    "S": [[(1, 0), (2, 0), (0, 1), (1, 1)], [(1, 0), (1, 1), (2, 1), (2, 2)]],
-    "Z": [[(0, 0), (1, 0), (1, 1), (2, 1)], [(2, 0), (1, 1), (2, 1), (1, 2)]],
+    "O": [
+        [(1, 0), (2, 0), (1, 1), (2, 1)],  # All rotations are the same
+        [(1, 0), (2, 0), (1, 1), (2, 1)],
+        [(1, 0), (2, 0), (1, 1), (2, 1)],
+        [(1, 0), (2, 0), (1, 1), (2, 1)],
+    ],
+    "T": [
+        [(1, 0), (0, 1), (1, 1), (2, 1)],  # 0
+        [(1, 0), (1, 1), (2, 1), (1, 2)],  # R
+        [(0, 1), (1, 1), (2, 1), (1, 2)],  # 2
+        [(1, 0), (0, 1), (1, 1), (1, 2)],  # L
+    ],
+    "S": [
+        [(1, 0), (2, 0), (0, 1), (1, 1)],  # 0
+        [(1, 0), (1, 1), (2, 1), (2, 2)],  # R
+        [(1, 1), (2, 1), (0, 2), (1, 2)],  # 2
+        [(0, 0), (0, 1), (1, 1), (1, 2)],  # L
+    ],
+    "Z": [
+        [(0, 0), (1, 0), (1, 1), (2, 1)],  # 0
+        [(2, 0), (1, 1), (2, 1), (1, 2)],  # R
+        [(0, 1), (1, 1), (1, 2), (2, 2)],  # 2
+        [(1, 0), (0, 1), (1, 1), (0, 2)],  # L
+    ],
     "J": [
-        [(0, 0), (0, 1), (1, 1), (2, 1)],
-        [(1, 0), (2, 0), (1, 1), (1, 2)],
-        [(0, 1), (1, 1), (2, 1), (2, 2)],
-        [(1, 0), (1, 1), (0, 2), (1, 2)],
+        [(0, 0), (0, 1), (1, 1), (2, 1)],  # 0
+        [(1, 0), (2, 0), (1, 1), (1, 2)],  # R
+        [(0, 1), (1, 1), (2, 1), (2, 2)],  # 2
+        [(1, 0), (1, 1), (0, 2), (1, 2)],  # L
     ],
     "L": [
-        [(2, 0), (0, 1), (1, 1), (2, 1)],
-        [(1, 0), (1, 1), (1, 2), (2, 2)],
-        [(0, 1), (1, 1), (2, 1), (0, 2)],
-        [(0, 0), (1, 0), (1, 1), (1, 2)],
+        [(2, 0), (0, 1), (1, 1), (2, 1)],  # 0
+        [(1, 0), (1, 1), (1, 2), (2, 2)],  # R
+        [(0, 1), (1, 1), (2, 1), (0, 2)],  # 2
+        [(0, 0), (1, 0), (1, 1), (1, 2)],  # L
     ],
 }
 
@@ -368,6 +389,7 @@ class Tetris:
         das_time = None
         das_direction = None
         last_key_processed = None
+        das_active = False  # Track if we're in DAS state
 
         while True:
             current_time = time.time()
@@ -398,6 +420,7 @@ class Tetris:
                             das_time = current_time
                             das_direction = event.key
                             last_key_processed = event.key
+                            das_active = False
 
                 if event.type == pygame.KEYUP:
                     if event.key in (pygame.K_LEFT, pygame.K_RIGHT):
@@ -405,17 +428,21 @@ class Tetris:
                             das_time = None
                             das_direction = None
                             last_key_processed = None
+                            das_active = False
 
             if not self.game_over and self.lines_cleared < 40:
                 keys = pygame.key.get_pressed()
 
                 # Handle DAS (Delayed Auto Shift)
-                if das_time is not None and current_time - das_time >= 0.08:  # 80ms DAS
-                    # After DAS, move piece all the way to the edge
-                    dx = -1 if das_direction == pygame.K_LEFT else 1
-                    while self.move_piece(dx, 0):
-                        pass
-                    das_time = None  # Prevent further DAS processing
+                if das_direction is not None and keys[das_direction]:
+                    if not das_active and current_time - das_time >= 0.08:  # 80ms DAS
+                        das_active = True
+
+                    if das_active:
+                        # Keep trying to move while in DAS state
+                        dx = -1 if das_direction == pygame.K_LEFT else 1
+                        self.move_piece(dx, 0)
+
                 elif das_time is None:
                     # Check for new key presses
                     if keys[pygame.K_LEFT] and last_key_processed != pygame.K_LEFT:
@@ -423,11 +450,13 @@ class Tetris:
                         das_time = current_time
                         das_direction = pygame.K_LEFT
                         last_key_processed = pygame.K_LEFT
+                        das_active = False
                     elif keys[pygame.K_RIGHT] and last_key_processed != pygame.K_RIGHT:
                         self.move_piece(1, 0)
                         das_time = current_time
                         das_direction = pygame.K_RIGHT
                         last_key_processed = pygame.K_RIGHT
+                        das_active = False
 
                 # Handle soft drop (instant)
                 if keys[pygame.K_DOWN]:
