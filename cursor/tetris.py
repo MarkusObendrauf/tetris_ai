@@ -12,7 +12,9 @@ pygame.init()
 CELL_SIZE = 30
 GRID_WIDTH = 10
 GRID_HEIGHT = 20
-SCREEN_WIDTH = CELL_SIZE * (GRID_WIDTH + 12)  # Extra space for UI elements
+LEFT_SIDEBAR_WIDTH = 4  # Width in cells for the hold piece area
+RIGHT_SIDEBAR_WIDTH = 8  # Width in cells for the next queue
+SCREEN_WIDTH = CELL_SIZE * (LEFT_SIDEBAR_WIDTH + GRID_WIDTH + RIGHT_SIDEBAR_WIDTH)
 SCREEN_HEIGHT = CELL_SIZE * GRID_HEIGHT
 PREVIEW_SCALE = 0.7
 
@@ -269,20 +271,24 @@ class Tetris:
     def draw_grid(self):
         self.screen.fill(COLORS["background"])
 
+        # Calculate positions
+        playfield_x = LEFT_SIDEBAR_WIDTH * CELL_SIZE
+        right_sidebar_x = playfield_x + GRID_WIDTH * CELL_SIZE + 20
+
         # Draw grid lines
         for x in range(GRID_WIDTH + 1):
             pygame.draw.line(
                 self.screen,
                 COLORS["grid"],
-                (x * CELL_SIZE, 0),
-                (x * CELL_SIZE, GRID_HEIGHT * CELL_SIZE),
+                (x * CELL_SIZE + playfield_x, 0),
+                (x * CELL_SIZE + playfield_x, GRID_HEIGHT * CELL_SIZE),
             )
         for y in range(GRID_HEIGHT + 1):
             pygame.draw.line(
                 self.screen,
                 COLORS["grid"],
-                (0, y * CELL_SIZE),
-                (GRID_WIDTH * CELL_SIZE, y * CELL_SIZE),
+                (playfield_x, y * CELL_SIZE),
+                (playfield_x + GRID_WIDTH * CELL_SIZE, y * CELL_SIZE),
             )
 
         # Draw placed pieces
@@ -292,7 +298,12 @@ class Tetris:
                     pygame.draw.rect(
                         self.screen,
                         COLORS[self.grid[y][x]],
-                        (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+                        (
+                            x * CELL_SIZE + playfield_x,
+                            y * CELL_SIZE,
+                            CELL_SIZE,
+                            CELL_SIZE,
+                        ),
                     )
 
         # Draw ghost piece
@@ -306,7 +317,12 @@ class Tetris:
                     pygame.draw.rect(
                         self.screen,
                         COLORS["ghost"],
-                        (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+                        (
+                            x * CELL_SIZE + playfield_x,
+                            y * CELL_SIZE,
+                            CELL_SIZE,
+                            CELL_SIZE,
+                        ),
                         1,
                     )
 
@@ -320,39 +336,41 @@ class Tetris:
                     pygame.draw.rect(
                         self.screen,
                         COLORS[self.current_piece],
-                        (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+                        (
+                            x * CELL_SIZE + playfield_x,
+                            y * CELL_SIZE,
+                            CELL_SIZE,
+                            CELL_SIZE,
+                        ),
                     )
 
-        # Draw UI elements
-        ui_x = GRID_WIDTH * CELL_SIZE + 20
-
-        # Draw hold piece
+        # Draw hold piece on the left side
         if self.held_piece:
-            self.draw_piece_preview(self.held_piece, (ui_x, 30), "HOLD")
+            self.draw_piece_preview(self.held_piece, (20, 30), "HOLD")
 
-        # Draw next pieces
+        # Draw next pieces on the right side
         for i, piece in enumerate(self.next_pieces[:5]):
             self.draw_piece_preview(
-                piece, (ui_x, 150 + i * 100), "NEXT" if i == 0 else None
+                piece, (right_sidebar_x, 30 + i * 100), "NEXT" if i == 0 else None
             )
 
         # Draw lines cleared and time
         lines_text = self.font.render(
             f"Lines: {self.lines_cleared}/40", True, COLORS["text"]
         )
-        self.screen.blit(lines_text, (ui_x, SCREEN_HEIGHT - 100))
+        self.screen.blit(lines_text, (right_sidebar_x, SCREEN_HEIGHT - 100))
 
         if self.start_time:
             elapsed = time.time() - self.start_time
             time_text = self.font.render(f"Time: {elapsed:.2f}", True, COLORS["text"])
-            self.screen.blit(time_text, (ui_x, SCREEN_HEIGHT - 60))
+            self.screen.blit(time_text, (right_sidebar_x, SCREEN_HEIGHT - 60))
 
         if self.lines_cleared >= 40:
             finish_time = time.time() - self.start_time
             finish_text = self.font.render(
                 f"Finished! {finish_time:.2f}s", True, COLORS["text"]
             )
-            self.screen.blit(finish_text, (ui_x, SCREEN_HEIGHT - 160))
+            self.screen.blit(finish_text, (right_sidebar_x, SCREEN_HEIGHT - 160))
 
     def draw_piece_preview(
         self, piece: str, pos: Tuple[int, int], label: Optional[str] = None
