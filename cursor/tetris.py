@@ -367,6 +367,7 @@ class Tetris:
     def run(self):
         das_time = None
         das_direction = None
+        last_key_processed = None
 
         while True:
             current_time = time.time()
@@ -391,31 +392,42 @@ class Tetris:
                         elif event.key == pygame.K_LSHIFT:
                             self.hold_piece()
                         elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+                            # Initial move on key press
+                            dx = -1 if event.key == pygame.K_LEFT else 1
+                            self.move_piece(dx, 0)
                             das_time = current_time
                             das_direction = event.key
+                            last_key_processed = event.key
 
                 if event.type == pygame.KEYUP:
                     if event.key in (pygame.K_LEFT, pygame.K_RIGHT):
                         if das_direction == event.key:
                             das_time = None
                             das_direction = None
+                            last_key_processed = None
 
             if not self.game_over and self.lines_cleared < 40:
                 keys = pygame.key.get_pressed()
 
                 # Handle DAS (Delayed Auto Shift)
                 if das_time is not None and current_time - das_time >= 0.08:  # 80ms DAS
+                    # After DAS, move piece all the way to the edge
                     dx = -1 if das_direction == pygame.K_LEFT else 1
-                    self.move_piece(dx, 0)
+                    while self.move_piece(dx, 0):
+                        pass
+                    das_time = None  # Prevent further DAS processing
                 elif das_time is None:
-                    if keys[pygame.K_LEFT]:
+                    # Check for new key presses
+                    if keys[pygame.K_LEFT] and last_key_processed != pygame.K_LEFT:
                         self.move_piece(-1, 0)
                         das_time = current_time
                         das_direction = pygame.K_LEFT
-                    elif keys[pygame.K_RIGHT]:
+                        last_key_processed = pygame.K_LEFT
+                    elif keys[pygame.K_RIGHT] and last_key_processed != pygame.K_RIGHT:
                         self.move_piece(1, 0)
                         das_time = current_time
                         das_direction = pygame.K_RIGHT
+                        last_key_processed = pygame.K_RIGHT
 
                 # Handle soft drop (instant)
                 if keys[pygame.K_DOWN]:
